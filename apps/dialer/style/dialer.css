@@ -1,10 +1,38 @@
+/* === Fonts === */
+
+
+@font-face {
+  font-family: 'FontLight';
+  src: url('fonts/opensans-light-webfont.woff');
+}
+
+@font-face {
+  font-family: 'FontRegular';
+  src: url('fonts/opensans-regular-webfont.woff');
+}
+
+@font-face {
+  font-family: 'FontSemibold';
+  font-weight: 600;
+  src: url('fonts/opensans-semibold-webfont.woff');
+}
+
+@font-face {
+  font-family: 'FontBold';
+  font-weight: bold;
+  src: url('fonts/opensans-bold-webfont.woff');
+}
+
+
+
+
 html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   margin: 0;
   color: white;
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'FontSemibold', sans-serif;
   font-size: 10px;
   background: black;
 }
@@ -13,22 +41,9 @@ html * {
   overflow: hidden;
 }
 
-@font-face {
-  font-family: 'Open Sans';
-  src: url('fonts/Open-Sans.woff');
-}
 
-@font-face {
-  font-family: 'Open Sans';
-  font-weight: bold;
-  src: url('fonts/Open-Sans-Bold.woff');
-}
 
-@font-face {
-  font-family: 'Open Sans';
-  font-weight: 600;
-  src: url('fonts/Open-Sans-Semibold.woff');
-}
+
 
 @media screen and (max-device-height: 800px) { 
   html {
@@ -64,22 +79,48 @@ html * {
   src: url('fonts/Keyboard-Symbols.woff');
 }
 
+
+.font-light{
+  font-family:'FontLight';
+}
+
+.font-regular{
+  font-family:'FontRegular';
+}
+
+.font-semibold{
+  font-family:'FontSemibold';
+}
+
+.font-bold{
+  font-family:'FontBold';
+}
+
+
 .phone-number-font{
-  font-size:18pt;
+  font-size:-moz-calc(18*0.226rem);
   color:white;
+  font-family:'FontRegular';
 }
 
 .kb-keypad-number{
-  font-size:25pt;
+  font-size:-moz-calc(25*0.226rem);
   color:white;
+
 }
 
 .kb-keypad-text{
-  font-size:6pt;
-  color:white;
+  font-size:-moz-calc(6*0.226rem);
+  color:#96AAB4;
+  
+ 
 }
 
 
+
+/*
+  Estilos del Layout
+*/
 #keyboard-view {
   width: 100%;
   height:100%;
@@ -99,127 +140,204 @@ html * {
   text-align:center;
   display: table;
   table-layout: fixed;
+  border-spacing:1.5rem;
 }
 
-#phone-number-view{
-  display:table-cell;
-  vertical-align:middle;
-  width: -moz-calc(100% - 3rem);
-}
+  #phone-number-view{
+    display:table-cell;
+    vertical-align:middle;
+    overflow: hidden;
+    text-overflow:ellipsis;
+    direction: rtl;
+    white-space: nowrap;
+     /*unicode-bidi: bidi-override;*/
+  }
+
+  #phone-number-delete-container{
+    display:table-cell;
+    vertical-align:middle;
+    width:3.8rem;
+    /*width: -moz-calc(100% - 3rem);*/
+  }
+    .phone-number-delete{
+      width:3.8rem;
+      height:2.8rem;
+      background-color: #DDD;
+    }
 
 #keyboard-container {
- /* display:table-row;*/
   width:100%;
-  background: green;
   height:34.5rem;
 }
 
-#kb-keypad{
-  background:yellow;
-  height:-moz-calc(100% - 6.5rem);
-  width:100%;
-  display:table;
-  table-layout:fixed;
-  background:red;  
-}
+  #kb-keypad{
+    background: #2d3642; 
+    background: -moz-linear-gradient(top, #2d3642 0%, #0f1214 100%); 
+    background: linear-gradient(top, #2d3642 0%,#0f1214 100%); 
+    height:-moz-calc(100% - 6.5rem);
+    width:100%;
+    display:table;
+    table-layout:fixed;
+  }
 
-.kb-keypad-cell{
-  display:table-cell;
-  border-right:1px solid black;
-}
 
-.kb-keypad-cell:last-child{
-  border:0;
-}
+    .kb-keypad-cell{
+      display:table-cell;
+      border-right:1px solid #313A47;
+    }
 
-.kb-keypad-cell-small{
-  width:10rem;
-} 
+    .kb-keypad-cell:last-child{
+      border:0;
+    }
+
+    .kb-keypad-cell-small{
+      width:10rem;
+    } 
       
-.kb-keypad-key{
-  background: #2d2642; /* Old browsers */
-  background: -moz-linear-gradient(top, #2d2642 0%, #0f1214 100%); /* FF3.6+ */
-  background: linear-gradient(top, #2d2642 0%,#0f1214 100%); /* W3C */
-  border:0;
-  border-right:1px solid #313A47;
-  border-bottom:1px solid #313A47;
-  height:7rem;
-  vertical-align:middle;
-}
+      .kb-keypad-key{
+        border:0;
+        border-bottom:1px solid #313A47;
+        height:7rem;
+        vertical-align:middle;
+        position:relative;
+      }
 
-.kb-keypad-key:last-child{
-  border-right:0;
-  border-bottom:0;
-}
 
-.kb-keypad-key-label-container{
-  width:100%;
-  height:100%;
-  display:table;
-}  
+      .kb-keypad-key:active{
+        background:black;
+        opacity:0.7;
+      }
 
-.kb-keypad-key-label{
-  display:table-cell;
-  text-align:center;
-  vertical-align:middle;
-}
-
-.kb-keypad-key-label > span {
-  pointer-events: none;
-}
+      .kb-keypad-key-clicked{
+       /* background:black;
+        opacity:0.7;*/
         
-.del-digit {
-  margin:0 auto;
-  background:url(images/dialer_icon_delete.png) 50% 50% no-repeat;
-  background-size: 3.8rem 2.8rem;
-}
+      }
+
+        .kb-keypad-key-clicked .kb-keypad-number,.kb-keypad-key-clicked .kb-keypad-text{
           
-#kb-callbar{
-  background:black;
-  height:6.5rem;
-  padding:1rem 1.5rem;
-  box-sizing:border-box;
-}
+          
+        }
 
-#kb-callbar-add-contact{
-  float:left;
-  display:inline-block;
-  height:4.5rem;
-  width:9rem;
-  background: #19191a; /* Old browsers */
-  background: -moz-linear-gradient(top, #19191a 0%, #242b36 100%); /* FF3.6+ */
-  background: linear-gradient(top, #19191a 0%,#242b36 100%); /* W3C */
-  border:.1rem solid #242B36;
-  border-radius:.5rem;
-}
 
-#kb-callbar-call-action{
-  float:right;
-  display:inline-block;
-  height:4.5rem;
-  width:19rem;background: #84c82c; /* Old browsers */
-  border:0;
-  border-radius:.5rem;
-  background: -moz-linear-gradient(top, #84c82c 0%, #5f9b0a 100%); /* FF3.6+ */
-  background: linear-gradient(top, #84c82c 0%,#5f9b0a 100%); /* W3C */
-}
+      .kb-keypad-key:focus{
+        background:#DADADA;
+      }
 
-.i-add-contact{
-  margin: auto;
-  width: 2.6rem;
-  height: 2.5rem;
-  background: url(images/dialer_icon_contact.png);
-  background-size: 2.6rem 2.5rem;
-}
+        .kb-keypad-key-label-container{
+          width:100%;
+          height:100%;
+          display:table;
+        }  
 
-.i-call{
-  margin:0 auto;
-  background-image:url("images/dialer_icon_call.png");
-  width:2.6rem;
-  height:2.5rem;
-  background-repeat:no-repeat;
-  background-size: 2.6rem 2.5rem;
-}
+        .kb-keypad-key-label{
+          display:table-cell;
+          padding-left:1.5rem;
+          box-sizing:border-box;
+          vertical-align:middle;
+        }
+
+        .kb-keypad-key-label-centered{
+         
+          padding-left:0;
+          text-align:center;
+        }
+
+
+
+        .kb-keypad-key-label > span {
+          pointer-events: none;
+        }
+        
+        .kb-keypad-key-del{
+          margin:0 auto;
+          background:url('images/dialer_icon_delete.png') ;
+          background-size: 3.8rem 2.8rem;
+          display: inline-block;
+          width:3.8rem;
+          height:2.8rem;
+          padding:0;
+          text-align:center;
+        }
+        
+
+  #kb-callbar{
+    background:black;
+    height:6.5rem;
+    
+    width:100%;
+    display:table;
+    table-layout:fixed;
+     border-spacing: 1.5rem 1rem;
+  }
+
+    #kb-callbar-add-contact{
+      
+      display:table-cell;
+      width:7rem;
+      background: -moz-linear-gradient(top, #242b36 0%, #19191a 100%); 
+      background: linear-gradient(top, #242b36 0%,#19191a 100%); 
+      border:.1rem solid #242B36;
+      border-radius:.2rem;
+    }
+    #kb-callbar-add-contact:active{
+      opacity:0.7;
+    }
+
+    #kb-delete{
+      display:table-cell;
+      text-align:center;
+      vertical-align:middle;
+      width:7rem;
+      background: -moz-linear-gradient(top, #242b36 0%, #19191a 100%); 
+      background: linear-gradient(top, #242b36 0%,#19191a 100%); 
+      border:.1rem solid #242B36;
+      border-radius:.2rem;
+    }
+    #kb-delete:active{
+      opacity:0.7;
+    }
+
+    #kb-callbar-call-action{
+      display:table-cell;
+      
+      background: #84c82c; 
+      border:0;
+      border-radius:.2rem;
+      background: -moz-linear-gradient(top, #84c82c 0%, #5f9b0a 100%); 
+      background: linear-gradient(top, #84c82c 0%,#5f9b0a 100%);
+    }
+    #kb-callbar-call-action:active{
+      opacity:0.7;
+    }
+
+      .i-add-contact{
+        margin:1rem auto;
+        width: 2.6rem;
+        height: 2.5rem;
+        background: url(images/dialer_icon_contact.png);
+        background-size: 2.6rem 2.5rem;
+      }
+
+
+      .i-call{
+        margin:1rem auto;
+        background-image:url("images/dialer_icon_call.png");
+        width:2.6rem;
+        height:2.5rem;
+        background-repeat:no-repeat;
+        background-size: 2.6rem 2.5rem;
+      }
+
+      .i-delete{
+       
+        
+        width:3.8rem;
+        height:2.8rem;
+       
+        
+      }
+
 
 
 /* === Call Screen === */
@@ -296,15 +414,15 @@ html * {
 }
 
 #call-screen.calling #call-number-view {
-  font-size: 4rem;
+    font-size: 4rem;
 }
 
 #call-screen.in-call #call-number-view {
-  font-size: 4rem;
+    font-size: 4rem;
 }
 
 #call-screen.incoming #call-number-view {
-  font-size: 4rem;
+    font-size: 4rem;
 }
 
 #call-screen.calling #call-picture {
@@ -327,7 +445,7 @@ html * {
 
 #call-screen.calling #call-picture img {
   height: 95%;
-  width: 90%;	
+  width: 90%; 
   margin: auto;
 }
 
@@ -338,7 +456,7 @@ html * {
 
 #call-screen.incoming #call-picture img {
   height: 95%;
-  width: 90%;	
+  width: 90%; 
   margin: auto;
 }
 
@@ -468,14 +586,19 @@ html * {
 }
 
 #call-screen.incoming #call-button {
+  /* height: 50%; */
   width: 100%;
   height: 100%;
+  /* padding: 5% 5% 5% 5%;*/
   padding: 0 5% 5% 5%;
 }
 
 #call-button > div {
   float: left;
   display: table;
+  /*margin: auto;*/
+  /* margin: 5% 0 5% 0;*/
+  /* margin: auto 0 auto 0;*/
   font-size: 2rem;
   font-weight: bold;
   text-align: center;
@@ -532,11 +655,15 @@ html * {
   width: -moz-calc(90% / 2 - 1px);
 }
 
+
+
 #mainKeyset.overlay {
   position: absolute;
   top: 0;
   height: 72%;
+
   background: url(images/call-screen-bg.png) center top no-repeat #575B66;
+
   color: white;
   z-index: 500;
 }
@@ -554,24 +681,23 @@ html * {
 }
 
 /* == Screen turn off hack == */
-
 #screen-off {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+
   background: black;
   z-index: 1000;
+
   display: none;
 }
-
 #screen-off.displayed {
   display: block;
 }
 
 /* localization */
-
 body.hidden *[data-l10n-id] {
   visibility: hidden;
 }
