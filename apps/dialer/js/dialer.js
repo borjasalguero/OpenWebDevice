@@ -82,6 +82,11 @@ function choiceChanged(target) {
   view.hidden = false;
 }
 
+
+/*
+ * Class which manage the different sounds in "keypad" while dialing
+ */
+
 var TonePlayer = {
   _sampleRate: 4000,
 
@@ -112,133 +117,154 @@ var TonePlayer = {
   }
 };
 
+/*
+ * Class which manage the different sounds in "keypad" while dialing
+ */
+
 var KeyHandler = {
-  get phoneNumber() {
-    delete this.phoneNumber;
-    return this.phoneNumber = document.getElementById('phone-number');
-  },
-
-  get fakePhoneNumberView() {
-    delete this.fakePhoneNumberView;
-    return this.fakePhoneNumberView =
-      document.getElementById('fake-phone-number-view');
-  },
-
-  get phoneNumberView() {
-    delete this.phoneNumberView;
-    return this.phoneNumberView = document.getElementById('phone-number-view');
-  },
-
+ 
   init: function kh_init() {
-    this.phoneNumber.value = '';
 
+    //TODO Check when this method is called, every time you launch the app?
+    
+    //Clean previous values in phone number
+    document.getElementById('phone-number').value = '';
+    document.getElementById('phone-number-view').innerHTML = '';
+    
+    // Add listeners
+    document.getElementById('kb-keypad').addEventListener('mousedown',this.keyHandler,true);
+    document.getElementById('kb-keypad').addEventListener('mouseup',this.keyHandler,false);
+    document.getElementById('kb-callbar-add-contact').addEventListener('mouseup',this.addContact,false);
+    document.getElementById('kb-callbar-call-action').addEventListener('mouseup',this.makeCall,false);
+    document.getElementById('kb-delete').addEventListener('mousedown',this.deleteDigit,false);
+    document.getElementById('kb-delete').addEventListener('mouseup',this.deleteDigit,false);
+
+    //Start Player of sounds in dialer
     TonePlayer.init();
   },
+  /*
+   * Method which delete a digit/all digits from screen. It depends on "Hold action"
+   * Hold functionality is based on two var: hold_timer,hold_active.
+   */
+  deleteDigit:function hk_deleteDigit(event){
+    //We stop bubbling propagation 
+    event.stopPropagation();
 
-  isContactShortcut: function kh_isContactShortcut(key) {
-    // TODO implement key shortcuts
-    return false;
-  },
-
-  formatPhoneNumber: function kh_formatPhoneNumber(phoneNumber) {
-    // TODO implement formatting depending on locale
-    return phoneNumber;
-  },
-
-  updateFontSize: function kh_updateFontSize() {
-    var self = this;
-    function getNextFontSize(fontSize, text) {
-      var div = self.fakePhoneNumberView;
-      div.style.fontSize = fontSize + 'px';
-      div.innerHTML = text;
-
-      var viewWidth = self.phoneNumberView.getBoundingClientRect().width;
-      console.log("viewWidth: " + viewWidth);
-      var rect = div.getBoundingClientRect();
-      console.log("rect: " + rect.width);
-      if (rect.width > viewWidth) {
-        fontSize = Math.max(fontSize - kFontStep, kMinFontSize);
-      } else if (fontSize < self._initialFontSize) {
-        div.style.fontSize = (fontSize + kFontStep) + 'px';
-        rect = div.getBoundingClientRect();
-        if (rect.width <= viewWidth)
-          fontSize += kFontStep;
+    //Depending of the event type 
+    if(event.type=='mousedown'){
+      //Start holding event management
+      KeyHandler.hold_timer=setTimeout(function(){
+        // After .400s we consider that is a "Hold action"
+        KeyHandler.hold_active=true;
+      },400);
+    }else if(event.type=='mouseup'){
+      //In is a "Hold action" end
+      if(KeyHandler.hold_active){
+        //We delete all digits
+        document.getElementById('phone-number').value='';
+        document.getElementById('phone-number-view').innerHTML='';
+      }else{
+        //Delete last digit
+        var previous_value=document.getElementById('phone-number').value;
+        var current_value=previous_value.slice(0, -1);
+        document.getElementById('phone-number').value=current_value;
+        document.getElementById('phone-number-view').innerHTML=current_value;
       }
-
-      return fontSize;
+      
+      //We set to default var involved in "Hold event" management
+      clearTimeout(KeyHandler.hold_timer);
+      KeyHandler.hold_active=false;
     }
-
-    var view = this.phoneNumberView;
-    var computedStyle = window.getComputedStyle(view, null);
-    var fontSize = computedStyle.getPropertyValue('font-size');
-    console.log(fontSize);
-    if (!this._initialFontSize) {
-      this._initialFontSize = parseInt(fontSize);
-    }
-
-    var text = this.formatPhoneNumber(this.phoneNumber.value);
-    view.innerHTML = text;
-
-    var newFontSize =
-      text ? getNextFontSize(parseInt(fontSize), text) : this._initialFontSize;
-      console.log(newFontSize);
-    if (newFontSize != fontSize)
-    view.style.fontSize = newFontSize + 'px';
   },
+  /*
+   * Method that retrieves phone number and makes a phone call
+   */
+  makeCall: function hk_makeCall(event){
+    //Stop bubbling propagation 
+    event.stopPropagation();
 
-  keyDown: function kh_keyDown(event) {
-    var key = event.target.getAttribute('data-value');
-    if (!key)
-      return;
+    //Retrieve phone number from input in DOM
+    var tel_number=document.getElementById('phone-number').value;
 
-    var callback = function(self) {
-      switch (key) {
-        case '0':
-          self.phoneNumber.value = self.phoneNumber.value.slice(0, -1) + '+';
-          break;
-        case '*':
-          self.phoneNumber.value = self.phoneNumber.value.slice(0, -1) + '#';
-          break;
-        case 'del':
-          self.phoneNumber.value = '';
-          break;
-        default:
-          if (self.isContactShortcut(key))
-            return;
-          break;
+    //If is not empty --> Make call
+    if (tel_number != '') {
+        CallHandler.call(tel_number);
+    }
+  },
+  /*
+   * Method that add phone number to contact list
+   */
+  addContact: function hk_addContact(event){
+    
+    //TODO Create the request to the contacts app
+
+  },
+  /*
+   * Method which handle keypad actions
+   */
+  keyHandler:function keyHandler(event){
+    //Stop bubbling propagation 
+    event.stopPropagation();
+
+    //Depending on event type
+    if(event.type=='mousedown'){
+      //If is a dial action in keypad
+      if(event.target.getAttribute('data-type')=='dial'){
+        //Retrieve key pressed
+        var key=event.target.getAttribute('data-value');
+
+        //Play key sound
+        TonePlayer.play(gTonesFrequencies[key]);
+
+        //Manage "Hold action" in "0" key
+        if(key=='0'){
+          KeyHandler.hold_timer=setTimeout(function(){
+            KeyHandler.hold_active=true;
+          },400);
+        }
       }
-      self.updateFontSize();
-    };
+    }else if(event.type=='mouseup'){
+      //Retrieve type of button which produces event
+      var data_type=event.target.getAttribute('data-type');
+      if(data_type=='dial'){
+        //If is a dial action in keypad retrieve key value
+        var key=event.target.getAttribute('data-value');
+        
+        //If key is "0", has a "Hold action"?
+        if(key=='0'){
+          if(KeyHandler.hold_active){
+            document.getElementById('phone-number').value+='+';
+            document.getElementById('phone-number-view').innerHTML+='+';
+          }else{
+            document.getElementById('phone-number').value+=key;
+            document.getElementById('phone-number-view').innerHTML+=key;
+          }
+        }else{
+          document.getElementById('phone-number').value+=key;
+          document.getElementById('phone-number-view').innerHTML+=key;
+        }
 
-    if (key == 'del-digit') {
-      this.phoneNumber.value = KeyHandler.phoneNumber.value.slice(0, -1);
-      this.updateFontSize();
-    } else if (key == 'make-call') {
-      // TODO: update the call button style to show his availability
-      if (this.phoneNumber.value != '') {
-        CallHandler.call(this.phoneNumber.value);
-      }
-    } else {
-      this.phoneNumber.value += key;
-      this.updateFontSize();
-      TonePlayer.play(gTonesFrequencies[key]);
+        //We set to default var involved in "Hold event" management
+        clearTimeout(KeyHandler.hold_timer);
+        KeyHandler.hold_active=false;
 
-      // Sending the DTMF tone
-      var telephony = navigator.mozTelephony;
-      if (telephony) {
-        telephony.startTone(key);
-        window.setTimeout(function ch_stopTone() {
-          telephony.stopTone();
-        }, 100);
+        
+        // Sending the DTMF tone
+        var telephony = navigator.mozTelephony;
+        if (telephony) {
+          telephony.startTone(key);
+          window.setTimeout(function ch_stopTone() {
+            telephony.stopTone();
+          }, 100);
+        }
       }
     }
-
-    this._timeout = window.setTimeout(callback, 400, this);
   },
-
-  keyUp: function kh_keyUp(event) {
-    clearTimeout(this._timeout);
+  handleEvent: function kh_handleEvent(event){
+    //TODO Use it if is necessary to control more events
+    
   }
+ 
 };
 
 var CallHandler = {
