@@ -28,4 +28,5 @@ var SettingsListener = {
 
     this._callbacks[name] = callback;
   }
+
 };
