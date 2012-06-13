@@ -10,23 +10,8 @@ var gTonesFrequencies = {
   '*': [941, 1209], '0': [941, 1336], '#': [941, 1477]
 };
 
-
-// Bug 690056 implement a visibility API, and it's likely that
-// we want this event to be fire when an app come back to life
-// or is minimized (it does not now).
-window.addEventListener('message', function visibleApp(evt) {
-  var data = evt.data;
-  if (data.message == 'visibilitychange') {
-    visibilityChanged(data.url, evt);
-  } else if (data == 'connected') {
-    CallHandler.connected();
-  } else if (data == 'disconnected') {
-    CallHandler.disconnected();
-  }
-});
-
-function visibilityChanged(url, evt) {
-  var data = evt.data;
+document.addEventListener('mozvisibilitychange', function visibility(e) {
+  var url = document.location.href;
   var params = (function makeURL() {
     var a = document.createElement('a');
     a.href = url;
@@ -40,7 +25,9 @@ function visibilityChanged(url, evt) {
     return rv;
   })();
 
-  if (!data.hidden) {
+  if (document.mozHidden) {
+    Recents.stopUpdatingDates();
+  } else {
     Recents.startUpdatingDates();
 
     var choice = params['choice'];
@@ -49,10 +36,8 @@ function visibilityChanged(url, evt) {
       Contacts.load();
       choiceChanged(contacts);
     }
-  } else {
-    Recents.stopUpdatingDates();
   }
-}
+});
 
 function choiceChanged(target) {
   var choice = target.dataset.choice;
@@ -81,11 +66,6 @@ function choiceChanged(target) {
   target.dataset.active = true;
   view.hidden = false;
 }
-
-
-/*
- * Class which manage the different sounds in "keypad" while dialing
- */
 
 var TonePlayer = {
   _sampleRate: 4000,
@@ -117,438 +97,338 @@ var TonePlayer = {
   }
 };
 
-/*
- * Class which manage the different sounds in "keypad" while dialing
- */
+// var KeyHandler = {
+//   get phoneNumber() {
+//     delete this.phoneNumber;
+//     return this.phoneNumber = document.getElementById('phone-number');
+//   },
 
+//   get fakePhoneNumberView() {
+//     delete this.fakePhoneNumberView;
+//     return this.fakePhoneNumberView =
+//       document.getElementById('fake-phone-number-view');
+//   },
 
-var DialerManager = {
-  
-  phoneNumber:'',
-  init: function kh_init() {
+//   get phoneNumberView() {
+//     delete this.phoneNumberView;
+//     return this.phoneNumberView = document.getElementById('phone-number-view');
+//   },
 
-    //TODO Check when this method is called, every time you launch the app?
-    
-    //Clean previous values in phone number
-    // document.getElementById('phone-number').value = '';
-    document.getElementById('phone-number-view').value = '';
-    DialerManager.phoneNumber='';
+//   init: function kh_init() {
+//     this.phoneNumber.value = '';
 
-    // Add listeners
-    document.getElementById('kb-keypad').addEventListener('mousedown',this.keyHandler,true);
+//     TonePlayer.init();
+//   },
 
+//   isContactShortcut: function kh_isContactShortcut(key) {
+//     // TODO implement key shortcuts
+//     return false;
+//   },
 
-    document.getElementById('kb-keypad').addEventListener('mouseup',this.keyHandler,true);
-    
-    document.getElementById('kb-callbar-add-contact').addEventListener('mouseup',this.addContact,false);
-    document.getElementById('kb-callbar-call-action').addEventListener('mouseup',this.makeCall,false);
-    document.getElementById('kb-delete').addEventListener('mousedown',this.deleteDigit,false);
-    document.getElementById('kb-delete').addEventListener('mouseup',this.deleteDigit,false);
-    document.getElementById('kb-callbar-back-action').addEventListener('mouseup',this.hide,false);
+//   formatPhoneNumber: function kh_formatPhoneNumber(phoneNumber) {
+//     // TODO implement formatting depending on locale
+//     return phoneNumber;
+//   },
 
-    //TODO Eliminar y poner dentro del Call manager
-    document.getElementById('co-basic-answer').addEventListener('mouseup',this.show,false);
+//   updateFontSize: function kh_updateFontSize() {
+//     var self = this;
+//     function getNextFontSize(fontSize, text) {
+//       var div = self.fakePhoneNumberView;
+//       div.style.fontSize = fontSize + 'px';
+//       div.innerHTML = text;
 
-    //Start Player of sounds in dialer
-    TonePlayer.init();
+//       var viewWidth = self.phoneNumberView.getBoundingClientRect().width;
+//       var rect = div.getBoundingClientRect();
+//       if (rect.width > viewWidth) {
+//         fontSize = Math.max(fontSize - kFontStep, kMinFontSize);
+//       } else if (fontSize < self._initialFontSize) {
+//         div.style.fontSize = (fontSize + kFontStep) + 'px';
+//         rect = div.getBoundingClientRect();
+//         if (rect.width <= viewWidth)
+//           fontSize += kFontStep;
+//       }
 
-    this.render(0);
-  },
-  util:{
-    moveCaretToEnd:function hk_util_moveCaretToEnd(el) {
-        if (typeof el.selectionStart == "number") {
-            el.selectionStart = el.selectionEnd = el.value.length;
-        } else if (typeof el.createTextRange != "undefined") {
-            el.focus();
-            var range = el.createTextRange();
-            range.collapse(false);
-            range.select();
-        }
-    }
-  },
-  hide:function hk_hide(){
-    
-    document.getElementById('call-screen').classList.add('call-screen-show');
-  },
-  show:function hk_show(layout_type){
-    
-    document.getElementById('call-screen').classList.remove('call-screen-show');
-  },
-  render:function hk_render(layout_type){
-    
-    //TODO Method which render properly if there is a call or not
-    // layout_type==1 represents dialer when there is a call active
-    if(layout_type){
-      
-      document.getElementById('kb-callbar-call-action').classList.add('hide');
-      document.getElementById('kb-callbar-add-contact').classList.add('hide');
-      document.getElementById('kb-delete').classList.add('hide');
-      document.getElementById('kb-callbar-back-action').classList.remove('hide');
-      
-    }else{
-      //Default layout
-      document.getElementById('kb-callbar-call-action').classList.remove('hide');
-      document.getElementById('kb-callbar-add-contact').classList.remove('hide');
-      document.getElementById('kb-delete').classList.remove('hide');
-      document.getElementById('kb-callbar-back-action').classList.add('hide');
-      
-    }
-    
-  },
-  /*
-   * Method which delete a digit/all digits from screen. It depends on "Hold action"
-   * Hold functionality is based on two var: hold_timer,hold_active.
-   */
-  deleteDigit:function hk_deleteDigit(event){
-    //We stop bubbling propagation 
-    event.stopPropagation();
+//       return fontSize;
+//     }
 
-    //Depending of the event type 
-    if(event.type=='mousedown'){
-      //Start holding event management
-      DialerManager.hold_timer=setTimeout(function(){
-        // After .400s we consider that is a "Hold action"
-        DialerManager.hold_active=true;
-      },400);
-    }else if(event.type=='mouseup'){
-      //In is a "Hold action" end
-      if(DialerManager.hold_active){
-        //We delete all digits
-        
-        DialerManager.phoneNumber='';
-      }else{
-        //Delete last digit
-        DialerManager.phoneNumber=DialerManager.phoneNumber.slice(0, -1);
-        
-      }
-      
-      document.getElementById('phone-number-view').value=DialerManager.phoneNumber;
-      DialerManager.util.moveCaretToEnd(document.getElementById('phone-number-view'));
-      //We set to default var involved in "Hold event" management
-      clearTimeout(DialerManager.hold_timer);
-      DialerManager.hold_active=false;
-    }
-  },
-  /*
-   * Method that retrieves phone number and makes a phone call
-   */
-  makeCall: function hk_makeCall(event){
-    //Stop bubbling propagation 
-    event.stopPropagation();
+//     var view = this.phoneNumberView;
+//     var computedStyle = window.getComputedStyle(view, null);
+//     var fontSize = computedStyle.getPropertyValue('font-size');
+//     if (!this._initialFontSize) {
+//       this._initialFontSize = parseInt(fontSize);
+//     }
 
-    //Retrieve phone number from input in DOM
-    var tel_number=document.getElementById('phone-number-view').value;
+//     var text = this.formatPhoneNumber(this.phoneNumber.value);
+//     view.innerHTML = text;
 
-    //If is not empty --> Make call
-    if (tel_number != '') {
-        CallHandler.call(tel_number);
-    }
+//     var newFontSize =
+//       text ? getNextFontSize(parseInt(fontSize), text) : this._initialFontSize;
+//     if (newFontSize != fontSize)
+//     view.style.fontSize = newFontSize + 'px';
+//   },
 
-    //Hide dialer and show call screen
-    DialerManager.hide();
-  },
-  /*
-   * Method that add phone number to contact list
-   */
-  addContact: function hk_addContact(event){
-    
-    //TODO Create the request to the contacts app
+//   keyDown: function kh_keyDown(event) {
+//     var key = event.target.getAttribute('data-value');
+//     if (!key)
+//       return;
 
-  },
-  /*
-   * Method which handle keypad actions
-   */
-  keyHandler:function hk_keyHandler(event){
-   
-    // event.stopPropagation();
-    
-      // this.style.background='red';
-      if(event.target.getAttribute('data-value')!=null){
-        var key=event.target.getAttribute('data-value');
-      }else if(event.target.parentNode.getAttribute('data-value')!=null){
-        var key=event.target.parentNode.getAttribute('data-value');
-      }
-      
-      if(key!=undefined){
-        
-        event.stopPropagation();
-        if(event.type=='mousedown'){
-          //Play key sound
-          TonePlayer.play(gTonesFrequencies[key]);
+//     var callback = function(self) {
+//       switch (key) {
+//         case '0':
+//           self.phoneNumber.value = self.phoneNumber.value.slice(0, -1) + '+';
+//           break;
+//         case '*':
+//           self.phoneNumber.value = self.phoneNumber.value.slice(0, -1) + '#';
+//           break;
+//         case 'del':
+//           self.phoneNumber.value = '';
+//           break;
+//         default:
+//           if (self.isContactShortcut(key))
+//             return;
+//           break;
+//       }
+//       self.updateFontSize();
+//     };
 
-          // Manage "Hold action" in "0" key
-          if(key=='0'){
+//     if (key == 'del' || key == 'del-digit') {
+//       this.phoneNumber.value = KeyHandler.phoneNumber.value.slice(0, -1);
+//       this.updateFontSize();
+//     } else if (key == 'call' || key == 'make-call') {
+//       // TODO: update the call button style to show his availability
+//       if (this.phoneNumber.value != '') {
+//         CallHandler.call(this.phoneNumber.value);
+//       }
+//     } else {
+//       this.phoneNumber.value += key;
+//       this.updateFontSize();
+//       TonePlayer.play(gTonesFrequencies[key]);
 
-            DialerManager.hold_timer=setTimeout(function(){
-              DialerManager.hold_active=true;
-            },400);
-          }
+//       // Sending the DTMF tone
+//       var telephony = navigator.mozTelephony;
+//       if (telephony) {
+//         telephony.startTone(key);
+//         window.setTimeout(function ch_stopTone() {
+//           telephony.stopTone();
+//         }, 100);
+//       }
+//     }
 
-        }else if(event.type=='mouseup'){
-          if(key=='0'){
-            if(DialerManager.hold_active){
+//     this._timeout = window.setTimeout(callback, 400, this);
+//   },
 
-              DialerManager.phoneNumber+='+';
-            }else{
-              DialerManager.phoneNumber+=key;
-            }
-          }else{
-            DialerManager.phoneNumber+=key;
-          }
-          document.getElementById('phone-number-view').value=DialerManager.phoneNumber;
-          DialerManager.util.moveCaretToEnd(document.getElementById('phone-number-view'));
-          //We set to default var involved in "Hold event" management
-          clearTimeout(DialerManager.hold_timer);
-          DialerManager.hold_active=false;
-        } 
-
-      }
-      
-    
-    
-    //Stop bubbling propagation 
-    // event.stopPropagation();
-
-    // //Depending on event type
-    // if(event.type=='mousedown'){
-    //   //If is a dial action in keypad
-    //   if(event.target.getAttribute('data-type')=='dial'){
-    //     //Retrieve key pressed
-    //     var key=event.target.getAttribute('data-value');
-
-    //     //Play key sound
-    //     // TonePlayer.play(gTonesFrequencies[key]);
-
-    //     //Manage "Hold action" in "0" key
-    //     if(key=='0'){
-    //       DialerManager.hold_timer=setTimeout(function(){
-    //         DialerManager.hold_active=true;
-    //       },400);
-    //     }
-    //   }
-    // }else if(event.type=='click'){
-    //   //Retrieve type of button which produces event
-    //   var data_type=event.target.getAttribute('data-type');
-    //   if(data_type=='dial'){
-    //     //If is a dial action in keypad retrieve key value
-    //     var key=event.target.getAttribute('data-value');
-        
-    //     //If key is "0", has a "Hold action"?
-    //     if(key=='0'){
-    //       if(DialerManager.hold_active){
-    //         // document.getElementById('phone-number').value+='+';
-    //         document.getElementById('phone-number-view').value+='+';
-    //       }else{
-    //         // document.getElementById('phone-number').value+=key;
-    //         document.getElementById('phone-number-view').value+=key;
-    //       }
-    //     }else{
-    //       // document.getElementById('phone-number').value+=key;
-    //       // document.getElementById('phone-number-view').innerHTML+=key;
-    //       document.getElementById('phone-number-view').value+=key;
-    //       // DialerManager.util.moveCaretToEnd(document.getElementById('phone-number-view'));
-    //       // moveCaretToEnd(document.getElementById('phone-number-view'));
-    //     }
-
-    //     //We set to default var involved in "Hold event" management
-    //     clearTimeout(DialerManager.hold_timer);
-    //     DialerManager.hold_active=false;
-
-        
-    //     // Sending the DTMF tone
-    //     var telephony = navigator.mozTelephony;
-    //     if (telephony) {
-    //       telephony.startTone(key);
-    //       window.setTimeout(function ch_stopTone() {
-    //         telephony.stopTone();
-    //       }, 100);
-    //     }
-    //   }
-    // }
-  },
-  handleEvent: function kh_handleEvent(event){
-    //TODO Use it if is necessary to control more events
-    
-  }
- 
-};
+//   keyUp: function kh_keyUp(event) {
+//     clearTimeout(this._timeout);
+//   }
+// };
 
 var CallHandler = {
-  // currentCall: null,
-  // _onCall: false,
-  // _screenLock: null,
+  currentCall: null,
+  _onCall: false,
+  _screenLock: null,
 
-  // setupTelephony: function ch_setupTelephony() {
-  //   if (this._telephonySetup)
-  //     return;
+  setupTelephony: function ch_setupTelephony() {
 
-  //   this._telephonySetup = true;
+    // CallUI.ui.show();
+    // document.getElementById('cs-h-info-primary').innerHTML+="ST ";
+    if (this._telephonySetup)
+      return;
 
-  //   var telephony = navigator.mozTelephony;
-  //   if (telephony.calls.length > 0) {
-  //     var call = telephony.calls[0];
-  //     CallHandler.incoming(call);
-  //   }
+    this._telephonySetup = true;
 
-  //   telephony.oncallschanged = function cc(evt) {
-  //     telephony.calls.forEach(function(call) {
-  //       if (call.state == 'incoming')
-  //         CallHandler.incoming(call);
-  //     });
-  //   };
-  // },
+    var telephony = navigator.mozTelephony;
+    if (telephony.calls.length > 0) {
+      var call = telephony.calls[0];
+      CallHandler.incoming(call);
+    }
 
-  // // callbacks
-  // call: function ch_call(number) {
-  //   this.callScreen.classList.remove('incoming');
-  //   this.callScreen.classList.remove('in-call');
-  //   this.callScreen.classList.add('calling');
-  //   this.numberView.innerHTML = number;
-  //   this.statusView.innerHTML = 'Calling...';
+    telephony.oncallschanged = function cc(evt) {
+      telephony.calls.forEach(function(call) {
+        if (call.state == 'incoming')
+          CallHandler.incoming(call);
+      });
+    };
+  },
 
-  //   this.lookupContact(number);
+  // callbacks
+  call: function ch_call(number) {
+    
+    // this.callScreen.classList.remove('incoming');
+    // this.callScreen.classList.remove('in-call');
+    // this.callScreen.classList.add('calling');
+    // this.numberView.innerHTML = number;
+    // this.statusView.innerHTML = 'Calling...';
 
-  //   var sanitizedNumber = number.replace(/-/g, '');
-  //   var call = window.navigator.mozTelephony.dial(sanitizedNumber);
-  //   call.addEventListener('statechange', this);
-  //   this.currentCall = call;
+    // this.lookupContact(number);
 
-  //   this.recentsEntry = {date: Date.now(), type: 'outgoing', number: number};
+    // var sanitizedNumber = number.replace(/-/g, '');
+    // Force to unmute, since some phones are muted by default.
+    
+    window.navigator.mozTelephony.muted = false;
+    var call = window.navigator.mozTelephony.dial(number);
+    call.addEventListener('statechange', this);
+    
+    CallHandler.currentCall = call;
 
-  //   this.toggleCallScreen();
-  // },
+    // this.recentsEntry = {date: Date.now(), type: 'outgoing', number: number};
 
-  // incoming: function ch_incoming(call) {
-  //   this.callScreen.classList.remove('calling');
-  //   this.callScreen.classList.remove('in-call');
-  //   this.callScreen.classList.add('incoming');
+    // this.toggleCallScreen();
 
-  //   this.currentCall = call;
-  //   call.addEventListener('statechange', this);
+    CallUI.render(0);
+    CallUI.ui.show();
+  },
 
-  //   this.recentsEntry = {
-  //     date: Date.now(),
-  //     type: 'incoming',
-  //     number: call.number
-  //   };
+  incoming: function ch_incoming(call) {
+    CallUI.render(2);
+    CallUI.ui.show();
+    // this.callScreen.classList.remove('calling');
+    // this.callScreen.classList.remove('in-call');
+    // this.callScreen.classList.add('incoming');
+    window.navigator.mozTelephony.muted = false;
+    this.currentCall = call;
+    call.addEventListener('statechange', this);
 
-  //   this.numberView.innerHTML = call.number || 'Anonymous';
-  //   this.statusView.innerHTML = 'Call from...';
+    // this.recentsEntry = {
+    //   date: Date.now(),
+    //   type: 'incoming',
+    //   number: call.number
+    // };
 
-  //   if (call.number)
-  //     this.lookupContact(call.number);
+    // this.numberView.innerHTML = call.number || 'Anonymous';
+    // this.statusView.innerHTML = 'Call from...';
 
-  //   this.toggleCallScreen();
-  // },
+    // if (call.number)
+    //   this.lookupContact(call.number);
 
-  // connected: function ch_connected() {
-  //   var callDirectionChar = "";
-  //   if(this.callScreen.classList.contains('incoming')) {
-  //     this.callScreen.classList.remove('incoming');
-  //     callDirectionChar = "&#8618";
-  //   } else 
-  //   if(this.callScreen.classList.contains('calling')) {
-  //     this.callScreen.classList.remove('calling');
-  //     callDirectionChar = "&#8617";
-  //   }
-  //   this.callScreen.classList.add("in-call");
-  //   // hardening against rapid ending
-  //   if (!this._onCall)
-  //     return;
+    // this.toggleCallScreen();
+  },
 
-  //   this.callDurationView.innerHTML = callDirectionChar + ' ' + '00:00';
+  connected: function ch_connected() {
+    CallUI.render(1);
+    // this.callScreen.classList.remove('incoming');
+    // this.callScreen.classList.add('calling');
+    // var callDirectionChar = "";
+    // if(this.callScreen.classList.contains('incoming')) {
+    //   this.callScreen.classList.remove('incoming');
+    //   callDirectionChar = "&#8618";
+    // } else 
+    // if(this.callScreen.classList.contains('calling')) {
+    //   this.callScreen.classList.remove('calling');
+    //   callDirectionChar = "&#8617";
+    // }
+    // this.callScreen.classList.add("in-call");
+    // // hardening against rapid ending
+    // if (!this._onCall)
+    //   return;
 
-  //   this.recentsEntry.type += '-connected';
+    // this.statusView.innerHTML = '00:00';
+    // this.callDurationView.innerHTML = callDirectionChar + ' ' + '00:00';
 
-  //   this._ticker = setInterval(function ch_updateTimer(self, startTime) {
-  //     var elapsed = new Date(Date.now() - startTime);
-  //     self.callDurationView.innerHTML = callDirectionChar + ' ' + elapsed.toLocaleFormat('%M:%S');
-  //   }, 1000, this, Date.now());
-  // },
+    // this.recentsEntry.type += '-connected';
 
-  // answer: function ch_answer() {
-  //   this.currentCall.answer();
-  // },
+    // this._ticker = setInterval(function ch_updateTimer(self, startTime) {
+    //   var elapsed = new Date(Date.now() - startTime);
+    //   self.statusView.innerHTML = elapsed.toLocaleFormat('%M:%S');
+    //   self.callDurationView.innerHTML = callDirectionChar + ' ' + elapsed.toLocaleFormat('%M:%S');
+    // }, 1000, this, Date.now());
+  },
 
-  // end: function ch_end() {
-  //   if (this.recentsEntry &&
-  //      (this.recentsEntry.type.indexOf('-connected') == -1)) {
-  //     this.recentsEntry.type += '-refused';
-  //   }
+  answer: function ch_answer() {
+    document.getElementById('cs-h-info-primary').innerHTML="answer ";
+    // // Force to unmute, since some phones are muted by default.
+    // window.navigator.mozTelephony.muted = false;
+    CallHandler.currentCall.answer();
+    CallUI.render(1);
+  },
 
-  //   if (this.currentCall) {
-  //     this.currentCall.hangUp();
-  //   }
+  end: function ch_end() {
+    document.getElementById('cs-h-info-primary').innerHTML="end ";
+    // if (this.recentsEntry &&
+    //    (this.recentsEntry.type.indexOf('-connected') == -1)) {
+    //   this.recentsEntry.type += '-refused';
+    // }
 
-  //   // We're not waiting for a disconnected statechange
-  //   // If the user touch the 'end' button we wants to get
-  //   // out of the call-screen right away.
-  //   this.disconnected();
-  // },
+    // if (this.currentCall) {
+    //   this.currentCall.hangUp();
+    // }
 
-  // disconnected: function ch_disconnected() {
-  //   if (this.currentCall) {
-  //     this.currentCall.removeEventListener('statechange', this);
-  //     this.currentCall = null;
-  //   }
+    // // We're not waiting for a disconnected statechange
+    // // If the user touch the 'end' button we wants to get
+    // // out of the call-screen right away.
+    // this.disconnected();
+    CallHandler.currentCall.hangUp();
+  },
 
-  //   if (this.muteButton.classList.contains('mute'))
-  //     this.toggleMute();
-  //   if (this.speakerButton.classList.contains('speak'))
-  //     this.toggleSpeaker();
-  //   if (this.keypadButton.classList.contains('displayed'))
-  //     this.toggleKeypad();
+  disconnected: function ch_disconnected() {
+    KeypadManager.render(0);
+    CallUI.ui.hide();
 
-  //   clearInterval(this._ticker);
 
-  //   this.toggleCallScreen();
+    // if (this.currentCall) {
+    //   this.currentCall.removeEventListener('statechange', this);
+    //   this.currentCall = null;
+    // }
 
-  //   if (this.recentsEntry) {
-  //     Recents.add(this.recentsEntry);
+    // if (this.muteButton.classList.contains('mute'))
+    //   this.toggleMute();
+    // if (this.speakerButton.classList.contains('speak'))
+    //   this.toggleSpeaker();
+    // if (this.keypadButton.classList.contains('displayed'))
+    //   this.toggleKeypad();
 
-  //     if ((this.recentsEntry.type.indexOf('outgoing') == -1) &&
-  //         (this.recentsEntry.type.indexOf('-refused') == -1) &&
-  //         (this.recentsEntry.type.indexOf('-connected') == -1)) {
+    // clearInterval(this._ticker);
 
-  //       var mozNotif = navigator.mozNotification;
-  //       if (mozNotif) {
-  //         var notification = mozNotif.createNotification(
-  //           'Missed call', 'From ' + this.recentsEntry.number
-  //         );
+    // this.toggleCallScreen();
 
-  //         notification.onclick = function ch_notificationClick() {
-  //           var recents = document.getElementById('recents-label');
-  //           choiceChanged(recents);
-  //           Recents.showLast();
+    // if (this.recentsEntry) {
+    //   Recents.add(this.recentsEntry);
 
-  //           // Asking to launch itself
-  //           navigator.mozApps.getSelf().onsuccess = function(e) {
-  //             var app = e.target.result;
-  //             app.launch();
-  //           };
-  //         };
+    //   if ((this.recentsEntry.type.indexOf('outgoing') == -1) &&
+    //       (this.recentsEntry.type.indexOf('-refused') == -1) &&
+    //       (this.recentsEntry.type.indexOf('-connected') == -1)) {
 
-  //         notification.show();
-  //       }
-  //     }
-  //     this.recentsEntry = null;
-  //   }
-  // },
+    //     var number = this.recentsEntry.number;
+    //     navigator.mozApps.getSelf().onsuccess = function(evt) {
+    //       var app = evt.target.result;
 
-  // handleEvent: function fm_handleEvent(evt) {
-  //   switch (evt.call.state) {
-  //     case 'connected':
-  //       this.connected();
-  //       break;
-  //     case 'disconnected':
-  //       this.disconnected();
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  // },
+    //       // Taking the first icon for now
+    //       // TODO: define the size
+    //       var icons = app.manifest.icons;
+    //       var iconURL = null;
+    //       if (icons) {
+    //         iconURL = app.installOrigin + icons[Object.keys(icons)[0]];
+    //       }
 
-  // // properties / methods
+    //       var notiClick = function() {
+    //         // Asking to launch itself
+    //         app.launch();
+    //       };
+
+    //       var title = 'Missed call';
+    //       var body = 'From ' + number;
+
+    //       NotificationHelper.send(title, body, iconURL, notiClick);
+    //     };
+    //   }
+
+    //   this.recentsEntry = null;
+    // }
+  },
+
+  handleEvent: function fm_handleEvent(evt) {
+    switch (evt.call.state) {
+      case 'connected':
+        this.connected();
+        break;
+      case 'disconnected':
+        this.disconnected();
+        break;
+      default:
+        break;
+    }
+  },
+
+  // properties / methods
   // get callScreen() {
   //   delete this.callScreen;
   //   return this.callScreen = document.getElementById('call-screen');
@@ -585,94 +465,100 @@ var CallHandler = {
   //   delete this.keypadView;
   //   // return this.keypadView = document.getElementById('mainKeyset');
   //   return this.keypadView = document.getElementById('kb-keypad');
-
   // },
 
-  // execute: function ch_execute(action) {
-  //   if (!this[action]) {
-  //     this.end();
-  //     return;
-  //   }
+  execute: function ch_execute(action) {
+    // if (!this[action]) {
+    //   this.end();
+    //   return;
+    // }
 
-  //   this[action]();
-  // },
+    // this[action]();
+  },
 
-  // toggleCallScreen: function ch_toggleScreen() {
-  //   var callScreen = document.getElementById('call-screen');
-  //   callScreen.classList.remove('animate');
+  toggleCallScreen: function ch_toggleScreen() {
 
-  //   var onCall = this._onCall;
-  //   callScreen.classList.toggle('prerender');
 
-  //   // hardening against the unavailability of MozAfterPaint
-  //   var finished = false;
 
-  //   var finishTransition = function ch_finishTransition() {
-  //     if (finished)
-  //       return;
+    // var callScreen = document.getElementById('call-screen');
+    // callScreen.classList.remove('animate');
 
-  //     if (securityTimeout) {
-  //       clearTimeout(securityTimeout);
-  //       securityTimeout = null;
-  //     }
+    // var onCall = this._onCall;
+    // callScreen.classList.toggle('prerender');
 
-  //     finished = true;
+    // // hardening against the unavailability of MozAfterPaint
+    // var finished = false;
 
-  //     window.setTimeout(function cs_transitionNextLoop() {
-  //       callScreen.classList.add('animate');
-  //       callScreen.classList.toggle('oncall');
-  //       callScreen.classList.toggle('prerender');
-  //     });
-  //   };
+    // var finishTransition = function ch_finishTransition() {
+    //   if (finished)
+    //     return;
 
-  //   window.addEventListener('MozAfterPaint', function ch_finishAfterPaint() {
-  //     window.removeEventListener('MozAfterPaint', ch_finishAfterPaint);
-  //     finishTransition();
-  //   });
-  //   var securityTimeout = window.setTimeout(finishTransition, 100);
+    //   if (securityTimeout) {
+    //     clearTimeout(securityTimeout);
+    //     securityTimeout = null;
+    //   }
 
-  //   this._onCall = !this._onCall;
+    //   finished = true;
 
-  //   // Assume we always either onCall or not, and always onCall before
-  //   // not onCall.
-  //   if (this._onCall) {
-  //     this._screenLock = navigator.requestWakeLock('screen');
-  //     ProximityHandler.enable();
-  //   } else {
-  //     this._screenLock.unlock();
-  //     this._screenLock = null;
-  //     ProximityHandler.disable();
-  //   }
-  // },
+    //   window.setTimeout(function cs_transitionNextLoop() {
+    //     callScreen.classList.add('animate');
+    //     callScreen.classList.toggle('oncall');
+    //     callScreen.classList.toggle('prerender');
+    //   });
+    // };
 
-  // toggleMute: function ch_toggleMute() {
-  //   this.muteButton.classList.toggle('mute');
-  //   navigator.mozTelephony.muted = !navigator.mozTelephony.muted;
-  // },
+    // window.addEventListener('MozAfterPaint', function ch_finishAfterPaint() {
+    //   window.removeEventListener('MozAfterPaint', ch_finishAfterPaint);
+    //   finishTransition();
+    // });
+    // var securityTimeout = window.setTimeout(finishTransition, 100);
 
-  // toggleKeypad: function ch_toggleKeypad() {
-  //   // Do nothing.
-  //   // this.keypadButton.classList.toggle('displayed');
-  //   // this.keypadView.classList.toggle('overlay');
-  // },
+    // this._onCall = !this._onCall;
 
-  // toggleSpeaker: function ch_toggleSpeaker() {
-  //   this.speakerButton.classList.toggle('speak');
-  //   navigator.mozTelephony.speakerEnabled =
-  //     !navigator.mozTelephony.speakerEnabled;
-  // },
+    // // Assume we always either onCall or not, and always onCall before
+    // // not onCall.
+    // if (this._onCall) {
+    //   this._screenLock = navigator.requestWakeLock('screen');
+    //   ProximityHandler.enable();
+    // } else {
+    //   this._screenLock.unlock();
+    //   this._screenLock = null;
+    //   ProximityHandler.disable();
+    // }
+  },
 
-  // lookupContact: function ch_lookupContact(number) {
-  //   Contacts.findByNumber(number, (function(contact) {
-  //     this.numberView.innerHTML = contact.name;
-  //   }).bind(this));
-  // }
+  toggleMute: function ch_toggleMute() {
+
+    // this.muteButton.classList.toggle('mute');
+    navigator.mozTelephony.muted = !navigator.mozTelephony.muted;
+  },
+
+  toggleKeypad: function ch_toggleKeypad() {
+    KeypadManager.render(1);
+    CallUI.ui.hide();
+    // Do nothing.
+    // this.keypadButton.classList.toggle('displayed');
+    // this.keypadView.classList.toggle('overlay');
+  },
+
+  toggleSpeaker: function ch_toggleSpeaker() {
+    // this.speakerButton.classList.toggle('speak');
+
+    navigator.mozTelephony.speakerEnabled = !navigator.mozTelephony.speakerEnabled;
+  },
+
+  lookupContact: function ch_lookupContact(number) {
+    // Contacts.findByNumber(number, (function(contact) {
+    //   this.numberView.innerHTML = contact.name;
+    // }).bind(this));
+  }
 };
 
 window.addEventListener('localized', function startup(evt) {
   window.removeEventListener('localized', startup);
 
-  DialerManager.init();
+  KeypadManager.init();
+  CallUI.init();
   CallHandler.setupTelephony();
 
   // Set the 'lang' and 'dir' attributes to <html> when the page is translated

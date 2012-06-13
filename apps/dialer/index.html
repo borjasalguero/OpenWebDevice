@@ -23,8 +23,8 @@
     </script>
     <script type="application/javascript" src="js/helper.js"></script>
     <script type="application/javascript" src="js/contacts.js"></script>
-    <script type="application/javascript" src="js/CallManager.js"></script>
     
+    <script type="application/javascript" src="js/CallManager.js"></script>
     <script type="application/javascript" src="js/KeypadManager.js"></script>
     <script type="application/javascript" src="js/dialer.js"></script>
     <script type="application/javascript" src="js/recents.js"></script>
@@ -156,13 +156,13 @@
             </div>
           </section>
           <section id="kb-callbar">
-            <span role="button" id="kb-callbar-add-contact"  data-type="action" data-value="add-contact" class="hide">
+            <span role="button" id="kb-callbar-add-contact"  data-type="action" data-value="add-contact" >
               <div class="i-add-contact"></div>  
             </span>
-            <span role="button" id="kb-callbar-call-action"  data-type="action" data-value="make-call" class="hide">
+            <span role="button" id="kb-callbar-call-action"  data-type="action" data-value="make-call">
               <div class="i-call"></div>  
             </span>
-            <span role="button" id="kb-callbar-back-action"  data-type="action" data-value="back">
+            <span role="button" id="kb-callbar-back-action"  data-type="action" data-value="back"  class="hide">
               <div class="i-back">
                 
               </div>  
@@ -180,7 +180,7 @@
         <div class="grid-wrapper grid">
           <article id="cs-h-info" class="grid-cell grid-v-align">
             <section id="cs-h-info-primary" class="contact-primary-info font-light cs-h-info">
-                Manolosssssadsasdasdasdasdasdasdasdadsadsasdadsadsasdasdasd
+                
             </section>
             <section id="cs-h-info-secondary" class="contact-secondary-info font-light cs-h-info">
               Mobile,Movistar
@@ -202,8 +202,8 @@
             <div class="grid-wrapper grid">
               <section id="co-advanced" class="grid-row">
                 <div class="grid-wrapper grid">
-                  <span id="mute" class="grid-cell options-column">
-                    <button class="co-advanced-option grid-wraper grid center">
+                  <span class="grid-cell options-column">
+                    <button id="mute" class="co-advanced-option grid-wraper grid center">
                       <span class="i-mute">
                         
                       </span>  
@@ -215,7 +215,7 @@
                     </button>
                   </span>
                   <span class="grid-cell options-column">
-                    <button class="co-advanced-option grid-wraper grid center" disabled="disabled">
+                    <button id="keypad-visibility" class="co-advanced-option grid-wraper grid center">
                       <span class="i-keypad">
                         
                       </span> 
@@ -227,7 +227,7 @@
                     </button>
                   </span>
                   <span class="grid-cell options-column">
-                    <button class="co-advanced-option grid-wraper grid">
+                    <button id="speaker" class="co-advanced-option grid-wraper grid">
                       <span class="i-speaker">
                         
                       </span>
