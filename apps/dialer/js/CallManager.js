@@ -1,20 +1,17 @@
 var CallUI={
 	
 	init:function cm_init(){
-		//alert("Init");
 		document.getElementById('mute').addEventListener('mouseup',CallHandler.toggleMute,false);
 		document.getElementById('keypad-visibility').addEventListener('mouseup',CallHandler.toggleKeypad,false);
 		document.getElementById('speaker').addEventListener('mouseup',CallHandler.toggleSpeaker,false);
-
 		document.getElementById('co-basic-answer').addEventListener('mouseup',CallHandler.answer,false);
-
 		document.getElementById('co-basic-reject').addEventListener('mouseup',CallHandler.end,false);
-	
-    
-    
 	},
-	update:function cm_update(contact){
-
+	update:function cm_update(phone_number){
+		document.getElementById('cs-h-info-primary').innerHTML=phone_number;
+	},
+	cleanTimer:function cm_cleanTime(){
+		clearInterval(CallUI.timer);
 	},
 	render:function cm_render(layout_type){
 		
@@ -23,14 +20,12 @@ var CallUI={
 		// 2 Incoming Call
 		switch(layout_type){
 			case 0:
-
-				//TODO Pondremos el cartel de "Calling", elimino el botón de "aceptar llamada" y deshabilitamos botones
+				document.getElementById('call-duration').innerHTML="...";
 				document.getElementById('co-basic-answer').classList.add('hide');
 				document.getElementById('co-advanced').classList.remove('transparent');
 				document.getElementById('keypad-visibility').setAttribute('disabled','disabled');
 				break;
 			case 1:
-				//TODO Ponemos la duración, el icono, elimino el botón de "aceptar llamada" y  activo los botones
 				if(!document.getElementById('co-basic-answer').classList.contains('hide')){
 					document.getElementById('co-basic-answer').classList.add('hide');
 				}
@@ -40,16 +35,33 @@ var CallUI={
 
 				document.getElementById('keypad-visibility').removeAttribute('disabled');
 
-
+				document.getElementById('call-duration').innerHTML="00:00";
 				 
+				// Create a method which manage Time in dialer
+				var sec=0;
+				CallUI.timer=setInterval(function(){
+					sec++;
 
+					var minutes=Math.floor(sec/60);
+					var seconds=sec%60;
+					if(minutes<10){
+						minutes='0'+minutes;
+					}
+
+					if(seconds<10){
+						seconds='0'+seconds;
+					}
+
+					document.getElementById('call-duration').innerHTML=minutes+':'+seconds;
+				},1000);
 				
 				
 				break;
 			case 2:
-				//Quito la visibilidad de los iconos y muestro el botón de "aceptar llamada"
+				
 				document.getElementById('co-basic-answer').classList.remove('hide');
 				document.getElementById('co-advanced').classList.add('transparent');
+				document.getElementById('call-duration').innerHTML="";
 				break;
 
 		}

@@ -273,12 +273,13 @@ var CallHandler = {
     // this.recentsEntry = {date: Date.now(), type: 'outgoing', number: number};
 
     // this.toggleCallScreen();
-
+    CallUI.update(number);
     CallUI.render(0);
     CallUI.ui.show();
   },
 
   incoming: function ch_incoming(call) {
+    CallUI.update(call.number);
     CallUI.render(2);
     CallUI.ui.show();
     // this.callScreen.classList.remove('calling');
@@ -334,7 +335,7 @@ var CallHandler = {
   },
 
   answer: function ch_answer() {
-    document.getElementById('cs-h-info-primary').innerHTML="answer ";
+    
     // // Force to unmute, since some phones are muted by default.
     // window.navigator.mozTelephony.muted = false;
     CallHandler.currentCall.answer();
@@ -342,7 +343,7 @@ var CallHandler = {
   },
 
   end: function ch_end() {
-    document.getElementById('cs-h-info-primary').innerHTML="end ";
+    
     // if (this.recentsEntry &&
     //    (this.recentsEntry.type.indexOf('-connected') == -1)) {
     //   this.recentsEntry.type += '-refused';
@@ -362,7 +363,7 @@ var CallHandler = {
   disconnected: function ch_disconnected() {
     KeypadManager.render(0);
     CallUI.ui.hide();
-
+    CallUI.cleanTimer();
 
     // if (this.currentCall) {
     //   this.currentCall.removeEventListener('statechange', this);
