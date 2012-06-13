@@ -149,6 +149,8 @@ html * {
     background:transparent;
     text-align: right;
     cursor:none;
+    -moz-user-select: none;
+    user-select: none;
   }
   #kb-delete{
     text-align:center;
@@ -381,6 +383,10 @@ html * {
 
 .hide{
   display:none !important;
+}
+
+.transparent{
+  visibility: hidden !important;
 }
 
 

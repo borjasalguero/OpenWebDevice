@@ -23,6 +23,9 @@
     </script>
     <script type="application/javascript" src="js/helper.js"></script>
     <script type="application/javascript" src="js/contacts.js"></script>
+    <script type="application/javascript" src="js/CallManager.js"></script>
+    
+    <script type="application/javascript" src="js/KeypadManager.js"></script>
     <script type="application/javascript" src="js/dialer.js"></script>
     <script type="application/javascript" src="js/recents.js"></script>
     <script type="application/javascript" src="js/proximity.js"></script>
@@ -199,7 +202,7 @@
             <div class="grid-wrapper grid">
               <section id="co-advanced" class="grid-row">
                 <div class="grid-wrapper grid">
-                  <span class="grid-cell options-column">
+                  <span id="mute" class="grid-cell options-column">
                     <button class="co-advanced-option grid-wraper grid center">
                       <span class="i-mute">
                         
@@ -239,13 +242,13 @@
               <footer id="co-basic" class="grid-row">
                 <div id="co-basic-wrapper" class="grid-wrapper grid">
                   
-                  <section id="co-basic-answer" class="grid-cell  co-basic-option co-basic-botton-hangup">
+                  <section id="co-basic-answer" class="grid-cell  co-basic-option co-basic-botton-start">
                     <div class="grid-wrapper">
                       <div class="i-hangup">
                       </div>
                     </div> 
                   </section>
-                  <section id="co-basic-reject" class="grid-cell co-basic-option co-basic-botton-start">
+                  <section id="co-basic-reject" class="grid-cell co-basic-option co-basic-botton-hangup">
                     <div class="grid-wrapper">
                       <div class="i-start-call">
                       </div>
