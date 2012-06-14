@@ -279,15 +279,17 @@ var CallHandler = {
   },
 
   incoming: function ch_incoming(call) {
-    CallUI.update(call.number);
-    CallUI.render(2);
-    CallUI.ui.show();
+    
     // this.callScreen.classList.remove('calling');
     // this.callScreen.classList.remove('in-call');
     // this.callScreen.classList.add('incoming');
     window.navigator.mozTelephony.muted = false;
-    this.currentCall = call;
+    CallHandler.currentCall = call;
     call.addEventListener('statechange', this);
+
+    CallUI.update(call.number);
+    CallUI.render(2);
+    CallUI.ui.show();
 
     // this.recentsEntry = {
     //   date: Date.now(),
@@ -337,9 +339,9 @@ var CallHandler = {
   answer: function ch_answer() {
     
     // // Force to unmute, since some phones are muted by default.
-    // window.navigator.mozTelephony.muted = false;
+    window.navigator.mozTelephony.muted = false;
     CallHandler.currentCall.answer();
-    CallUI.render(1);
+    
   },
 
   end: function ch_end() {
@@ -358,12 +360,13 @@ var CallHandler = {
     // // out of the call-screen right away.
     // this.disconnected();
     CallHandler.currentCall.hangUp();
+    // CallUI.cleanTimer();
   },
 
   disconnected: function ch_disconnected() {
     KeypadManager.render(0);
     CallUI.ui.hide();
-    CallUI.cleanTimer();
+    // CallUI.cleanTimer();
 
     // if (this.currentCall) {
     //   this.currentCall.removeEventListener('statechange', this);
@@ -468,16 +471,16 @@ var CallHandler = {
   //   return this.keypadView = document.getElementById('kb-keypad');
   // },
 
-  execute: function ch_execute(action) {
+  // execute: function ch_execute(action) {
     // if (!this[action]) {
     //   this.end();
     //   return;
     // }
 
     // this[action]();
-  },
+  // },
 
-  toggleCallScreen: function ch_toggleScreen() {
+  // toggleCallScreen: function ch_toggleScreen() {
 
 
 
@@ -526,7 +529,7 @@ var CallHandler = {
     //   this._screenLock = null;
     //   ProximityHandler.disable();
     // }
-  },
+  // },
 
   toggleMute: function ch_toggleMute() {
 

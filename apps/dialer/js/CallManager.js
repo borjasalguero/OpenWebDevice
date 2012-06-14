@@ -38,22 +38,22 @@ var CallUI={
 				document.getElementById('call-duration').innerHTML="00:00";
 				 
 				// Create a method which manage Time in dialer
-				var sec=0;
-				CallUI.timer=setInterval(function(){
-					sec++;
+				// var sec=0;
+				// CallUI.timer=setInterval(function(){
+				// 	sec++;
 
-					var minutes=Math.floor(sec/60);
-					var seconds=sec%60;
-					if(minutes<10){
-						minutes='0'+minutes;
-					}
+				// 	var minutes=Math.floor(sec/60);
+				// 	var seconds=sec%60;
+				// 	if(minutes<10){
+				// 		minutes='0'+minutes;
+				// 	}
 
-					if(seconds<10){
-						seconds='0'+seconds;
-					}
+				// 	if(seconds<10){
+				// 		seconds='0'+seconds;
+				// 	}
 
-					document.getElementById('call-duration').innerHTML=minutes+':'+seconds;
-				},1000);
+				// 	document.getElementById('call-duration').innerHTML=minutes+':'+seconds;
+				// },1000);
 				
 				
 				break;
